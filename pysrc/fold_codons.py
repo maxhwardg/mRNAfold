@@ -3,7 +3,7 @@ from typing import List
 from dataclasses import dataclass, field
 import subprocess
 import tempfile
-import RNA # ViennaRNA Python bindings
+import RNA  # ViennaRNA Python bindings
 
 
 @dataclass
@@ -105,6 +105,14 @@ class FoldCodonsConfig:
     # Also, increasing sample diversity is recommended
     # (e.g., via subopt_randomness or keep_chance, and num_subopt_rounds)
     encourage_unpaired: List[tuple[int, int]] = field(default_factory=list)
+    # A list of pairs of nucleotides that are discouraged from being paired
+    # This is done similarly to encourage_unpaired. See above for details
+    discouraged_pairs: List[tuple[int, int]] = field(default_factory=list)
+    # A list of pairs of nucleotides that are encouraged to be paired
+    # Nucleotides are zero-indexed
+    # This is done by adding a bonus to the score for each pair
+    # This is not a hard constraint, but a gentle encouragement
+    encouraged_pairs: List[tuple[int, int]] = field(default_factory=list)
     # The number of rounds of suboptimal sampling to run
     # The total number of samples will be num_subopt_traces * num_subopt_rounds
     # Note that rounds get executed in parallel if parallel is set to True
@@ -130,8 +138,13 @@ class FoldCodonsConfig:
     codon_freq_path: str | None = None
 
 
+class FoldCodonsError(Exception):
+    """Base class for exceptions in this module"""
+
 # Given the configuration, call the fold_codons executable
 # Returns a list containing the suboptimal samples
+
+
 def call_fold_codons(cfg: FoldCodonsConfig) -> List[FoldCodonResult]:
     """
     Calls the fold_codons executable with the given configuration
@@ -160,6 +173,10 @@ def call_fold_codons(cfg: FoldCodonsConfig) -> List[FoldCodonResult]:
         tmp_file.write(f"utr_3p {cfg.utr_3p}\n")
     for span in cfg.encourage_unpaired:
         tmp_file.write(f"encourage_unpaired {span[0]},{span[1]}\n")
+    for pair in cfg.discouraged_pairs:
+        tmp_file.write(f"discourage_pair {pair[0]},{pair[1]}\n")
+    for pair in cfg.encouraged_pairs:
+        tmp_file.write(f"encourage_pair {pair[0]},{pair[1]}\n")
     tmp_file.close()
     cmd = [cfg.exe_path, tmp_file.name]
     results = []
@@ -167,8 +184,9 @@ def call_fold_codons(cfg: FoldCodonsConfig) -> List[FoldCodonResult]:
     stdout, stderr = p.communicate()
     p.terminate()
     if p.returncode != 0:
-        raise Exception(f"fold_codons failed with return code: "
-                        f"{p.returncode} and stderr: {stderr or 'None'}")
+        stderr_str = stderr.decode() if stderr is not None else "None"
+        raise FoldCodonsError(f"fold_codons failed with return code: "
+                              f"{p.returncode} and stderr: {stderr_str}")
     lines = stdout.decode().split('\n')
     if lines[-1] == "":
         lines = lines[:-1]
@@ -182,14 +200,14 @@ def call_fold_codons(cfg: FoldCodonsConfig) -> List[FoldCodonResult]:
 
 def main():
     """Demonstrates how to use call_fold_codons"""
-    
+
     def get_fc(rna: str, dangles: int = 0):
         # Default to dangles=0 since that is what mRNAfold uses
         md = RNA.md()
         md.dangles = dangles
         fc = RNA.fold_compound(rna, md)
         return fc
-    
+
     config = FoldCodonsConfig(
         # miniGFP example
         aa_seq="MEKSFVITDPWLPDYPIISASDGFLELTEYSREEIMGRNARFLQGPETDQATVQKIRDAIRDRRPTTVQLINYTKSGKKFWNLLHLQPVFDGKGGLQYFIGVQLVGSDHV",

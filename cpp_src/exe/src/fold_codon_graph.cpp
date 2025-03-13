@@ -32,6 +32,7 @@ using EnergyT = typename SemiringT::energy_type;
 const map<string, string> kOrganismCodonFreqStr = {{"human", mwmrna::kHomosapiensCodonFreq},
                                                    {"mouse", mwmrna::kMouseCodonFreq}};
 const double kBannedPenalty = 100;
+const double kEncouragedBonus = -100;
 const double kPfnNtFactor = 0.37;
 
 struct Config {
@@ -47,6 +48,8 @@ struct Config {
     vector<pair<int, int>> encourage_unpaired;
     int num_subopt_rounds = 1;
     int rng_seed = 0;
+    vector<pair<int, int>> encouraged_pairs;
+    vector<pair<int, int>> discouraged_pairs;
 };
 
 void AddCodonScore(Config& config, const vector<pair<int, mwmrna::Codon>>& banned_codons,
@@ -133,11 +136,24 @@ Config ParseConfigFile(const string& filename) {
         } else if (name == "keep_chance") {
             config.keep_chance = stod(value);
         } else if (name == "encourage_unpaired") {
+            // TODO: Consider adding discourage_unpaired
             // split by comma
             auto it = value.find(',');
             int i = stoi(value.substr(0, it));
             int j = stoi(value.substr(it + 1));
             config.encourage_unpaired.push_back({i, j});
+        } else if (name == "encourage_pair") {
+            // split by comma
+            auto it = value.find(',');
+            int i = stoi(value.substr(0, it));
+            int j = stoi(value.substr(it + 1));
+            config.encouraged_pairs.push_back({i, j});
+        } else if (name == "discourage_pair") {
+            // split by comma
+            auto it = value.find(',');
+            int i = stoi(value.substr(0, it));
+            int j = stoi(value.substr(it + 1));
+            config.discouraged_pairs.push_back({i, j});
         } else if (name == "num_subopt_rounds") {
             config.num_subopt_rounds = stoi(value);
         } else if (name == "rng_seed") {
@@ -229,6 +245,14 @@ int main(int argc, char** argv) {
             }
         }
 
+        for (auto [i,j] : config.discouraged_pairs) {
+            pair_bonus[i][j] = kBannedPenalty;
+        }
+
+        for (auto [i, j] : config.encouraged_pairs) {
+            pair_bonus[i][j] = kEncouragedBonus;
+        }
+
         mwmrna::fold_codons::GraphFoldContext<EnergyModelT> ctx{
             .em = em,
             .graph = graph,
@@ -241,7 +265,6 @@ int main(int argc, char** argv) {
         std::clog << "DP table filled. Suboptimal trace generation starting..." << std::endl;
 
         std::cout << std::fixed << std::setprecision(4);
-
 
         mwmrna::FoldConfig<decltype(boltz_em)> boltz_cfg{
             .em = boltz_em,
