@@ -20,7 +20,7 @@ This software package has several advantages over existing packages. It supports
 - Techniques to that increase the diversity of suboptimal samples. At time of writing no other software has this feature. Novel algorithms were developed to enable this, which are soon to be published
 - Supports MFE and CAI optimisation (like LinearDesign and DERNA)
 - Multithreaded algorithms (utilizing the C++ standard library)
-- Very efficient code. mRNAfold is competitive with LinearDesign despite mRNAfold employing an exact algorithms and LinearDesign using an approximation algorithm. In addition, with multithreading enabled mRNAfold is extremely fast. On a 16-core AMD 7950X with a protein comprising 1500 amino acids LinearDesign took 302s and mRNAfold took 46s (DERNA and CDSfold are much slower than both).
+- Very efficient code. mRNAfold is competitive with LinearDesign despite mRNAfold employing an exact algorithm and LinearDesign using an approximation. In addition, with multithreading enabled mRNAfold is extremely fast. On a 16-core AMD 7950X with a protein comprising 1500 amino acids LinearDesign took 302s and mRNAfold took 46s (DERNA and CDSfold are much slower than both).
 - Can incoporate the UTRs into the optimisation
 - Can force or ban codons at specific positions in the sequence
 
