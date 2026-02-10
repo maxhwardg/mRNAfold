@@ -150,8 +150,7 @@ More details of the parameters can be found by looking at the `FoldCodonsConfig`
 The following files are good examples of the basic parmeters: `minigfp_example1.config`, `minigfp_example2.config`, and `egfp_example.config`. In addition, `ffluc_example.config` and `lacz_example.config` are similarly good examples using longer sequences, but are much slower to run.
 
 
-See `minigfp_example3.config`. It demonstrates the usage of utr_5p, utr_3p, and
-banned_motifs, which can be used to add UTRs and banned sequences respectively. The UTRs will not be modified by the algorithm but will be considered when calculating MFE.
+See `minigfp_example3.config`. It demonstrates the usage of utr_5p, utr_3p, which can be used to add UTRs. The UTRs will not be modified by the algorithm but will be considered when calculating MFE.
 
 The `minigfp_example4.config` shows an example of the encourage_unpaired parameter. This encourages certain regions to be unpaired by using a penalty. Note that this setting is subtle. It will find samples where the sequence-structure pair does not have pairs in the given region, but that does not enforce that the MFE structure for that sequence does not have pairs there. Nonetheless, it is a good way to encourage certain regions to have fewer pairs. It works well in combination with suboptimal folding to find sequences with unpaired regions.
 
