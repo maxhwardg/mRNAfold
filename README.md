@@ -6,6 +6,7 @@
   - [Basic Information](#basic-information)
   - [Citation](#citation)
   - [Build Guide](#build-guide)
+  - [Docker](#docker)
   - [Example Config Files](#example-config-files)
   - [Python Script](#python-script)
 
@@ -131,6 +132,19 @@ AUGGAAAAAUCCUUCGUGAUUACUGACCCAUGGCUGCCCGACUAUCCUAUCAUCAGCGCCAGCGAUGGCUUCCUGGAGCU
 Score: -122.9577
 EFE: -163.9839
 CAI: 0.9038
+```
+
+## Docker
+
+A `Dockerfile` has been provided that encapsulates the above build instructions. Some key commands:
+
+```bash
+# Build image
+docker build -t mrnafold .
+# Run with a config
+docker run --rm mrnafold fold_codon_graph configs/minigfp_example2.config
+# Run python from within pysrc
+docker run --rm mrnafold bash -c "cd pysrc && python3 fold_codons.py"
 ```
 
 ## Example Config Files
